@@ -1,0 +1,33 @@
+server:
+  port: 9090
+spring:
+  application:
+    name: STOCK-PRICE-API
+  datasource:
+    url: jdbc:oracle:thin:@//localhost:1521/XE
+    username: RPH
+    password: admin
+    driver-class-name: oracle.jdbc.OracleDriver
+  jpa:
+    database-platform: org.hibernate.dialect.Oracle10gDialect
+    show-sql: true
+    hibernate:
+      ddl-auto: update
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: bowbowtags@gmail.com
+    password: rlyyfcfmzvwtonbd
+    properties:
+      mail:
+        smtp:
+          starttls:
+            enable: true
+          auth: true
+app:
+  messages:
+    welcomeMsg: Welcome to our World !!
+    invalidCredentials: Invalid Credentials
+    accLocked: Your Account is Locked
+    userRegSuccess: Please check your email for unlocking your account
+    userRegFail : Failed to Register
