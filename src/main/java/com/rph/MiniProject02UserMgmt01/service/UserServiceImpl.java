@@ -23,6 +23,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.ui.freemarker.FreeMarkerTemplateUtils;
 
 
+import java.io.BufferedReader;
+import java.io.FileReader;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -69,6 +71,7 @@ public class UserServiceImpl implements UserService{
             countryMap.put(country.getCountryId(), country.getCountryName());
         });
         return countryMap;
+
     }
 
     @Override
@@ -113,8 +116,9 @@ public class UserServiceImpl implements UserService{
         // TODO: password encryption Functionality
         entity = userRepo.save(entity);
         // EMAIL Functionality
-
-        boolean status = emailUtils.sendEmail(userForm.getEmail(), "subject", "body");
+        String emailBody = readUnlockAccEmailBody(entity);
+        String subject = appProps.getMessages().get(AppConstants.UNLOCK_ACC_EMAIL_SUB);
+        boolean status = emailUtils.sendEmail(userForm.getEmail(), subject, emailBody);
         return entity.getUserId()!=null ? true : false ;
     }
 
@@ -128,8 +132,30 @@ public class UserServiceImpl implements UserService{
         return sb.toString();
     }
 
-    private boolean sendEmailToUser(String email) {
-        return false;
+    private String readUnlockAccEmailBody(UserAccountEntity entity) {
+        StringBuffer sb = new StringBuffer(AppConstants.EMPTY_STR);
+        String mailBody = AppConstants.EMPTY_STR;
+        try {
+            String fileName = appProps.getMessages().get(AppConstants.UNLOCK_ACC_EMAIL_BODY_FILE);
+            FileReader fr = new FileReader(fileName);
+            BufferedReader br = new BufferedReader(fr);
+            String line = br.readLine();
+
+            while (line != null) {
+                sb.append(line);
+                line = br.readLine();
+            }
+            br.close();
+
+            mailBody = sb.toString();
+            mailBody = mailBody.replaceAll(AppConstants.FNAME, entity.getFName());
+            mailBody = mailBody.replaceAll(AppConstants.LNAME, entity.getLName());
+            mailBody = mailBody.replaceAll(AppConstants.TEMP_PWD, entity.getPazzword());
+            mailBody = mailBody.replaceAll(AppConstants.EMAIL, entity.getEmail());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return mailBody;
     }
 
     @Override

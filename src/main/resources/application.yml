@@ -31,3 +31,5 @@ app:
     accLocked: Your Account is Locked
     userRegSuccess: Please check your email for unlocking your account
     userRegFail : Failed to Register
+    unlockAccEmailSub: Registration Success
+    unlockAccEmailBodyFile: UNLOCK-ACC-EMAIL-BODY-TEMPLATE.txt
