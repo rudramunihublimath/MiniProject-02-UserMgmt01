@@ -19,9 +19,12 @@ public class AppConstants {
        public static final String USER_REG_FAIL =  "userRegFail";
 
        public static final String UNLOCK_ACC_EMAIL_SUB =  "unlockAccEmailSub";
+       public static final String RECOVER_PWD_EMAIL_SUB =  "recoverPwdEmailSub";
        public static final String UNLOCK_ACC_EMAIL_BODY_FILE = "unlockAccEmailBodyFile";
-       public static final String FNAME = "FNAME";
-       public static final String LNAME = "LNAME" ;
-       public static final String TEMP_PWD = "TEMP-PWD" ;
-       public static final String EMAIL = "EMAIL" ;
+       public static final String RECOVER_PWD_EMAIL_BODY_FILE = "recoverPwdEmailBodyFile";
+       public static final String FNAME = "{FNAME}";
+       public static final String LNAME = "{LNAME}" ;
+       public static final String TEMP_PWD = "{TEMP-PWD}" ;
+       public static final String PWD = "{PWD}" ;
+       public static final String EMAIL = "{EMAIL}" ;
 }

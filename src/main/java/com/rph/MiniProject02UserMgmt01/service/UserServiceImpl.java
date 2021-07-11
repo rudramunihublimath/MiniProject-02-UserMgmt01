@@ -148,10 +148,10 @@ public class UserServiceImpl implements UserService{
             br.close();
 
             mailBody = sb.toString();
-            mailBody = mailBody.replaceAll(AppConstants.FNAME, entity.getFName());
-            mailBody = mailBody.replaceAll(AppConstants.LNAME, entity.getLName());
-            mailBody = mailBody.replaceAll(AppConstants.TEMP_PWD, entity.getPazzword());
-            mailBody = mailBody.replaceAll(AppConstants.EMAIL, entity.getEmail());
+            mailBody = mailBody.replace(AppConstants.FNAME, entity.getFName());
+            mailBody = mailBody.replace(AppConstants.LNAME, entity.getLName());
+            mailBody = mailBody.replace(AppConstants.TEMP_PWD, entity.getPazzword());
+            mailBody = mailBody.replace(AppConstants.EMAIL, entity.getEmail());
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -165,7 +165,7 @@ public class UserServiceImpl implements UserService{
         UserAccountEntity user = userRepo.findByEmailAndPazzword(email, tempPwd);
 
         if(user!=null) {
-            user.setPazzword(unlockAccForm.getNewPwd1());
+            user.setPazzword(unlockAccForm.getNewPwd());
             user.setAccStatus(AppConstants.UNLOCKED);
             userRepo.save(user);
             return true;
@@ -182,11 +182,39 @@ public class UserServiceImpl implements UserService{
             String email = userEntity.getEmail();
             String pazzword = userEntity.getPazzword();
             // TODO: EMAIL to user
+            String emailBody = readForgotPwdEmailBody(userEntity);
+            String subject = appProps.getMessages().get(AppConstants.RECOVER_PWD_EMAIL_SUB);
+            boolean status = emailUtils.sendEmail(emailId, subject, emailBody);
             return true;
         }
         else {
             return false;
         }
+    }
+
+    private String readForgotPwdEmailBody(UserAccountEntity userEntity) {
+        StringBuffer sb = new StringBuffer(AppConstants.EMPTY_STR);
+        String mailBody = AppConstants.EMPTY_STR;
+        try {
+            String fileName = appProps.getMessages().get(AppConstants.RECOVER_PWD_EMAIL_BODY_FILE);
+            FileReader fr = new FileReader(fileName);
+            BufferedReader br = new BufferedReader(fr);
+            String line = br.readLine();
+
+            while (line != null) {
+                sb.append(line);
+                line = br.readLine();
+            }
+            br.close();
+
+            mailBody = sb.toString();
+            mailBody = mailBody.replace(AppConstants.FNAME, userEntity.getFName());
+            mailBody = mailBody.replace(AppConstants.LNAME, userEntity.getLName());
+            mailBody = mailBody.replace(AppConstants.PWD, userEntity.getPazzword());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return mailBody;
     }
 
     private Optional<UserAccountEntity> getUserByEmail(String emailId) {
