@@ -15,10 +15,9 @@ public class UnlockAccRestController {
     @PostMapping("/unlock")
     public String unlockUserAcc(@RequestBody UnlockAccForm unlockAccForm) {
         boolean unlockAccount = userService.unlockAccount(unlockAccForm);
-        if(unlockAccount){
+        if (unlockAccount) {
             return "Account Unlocked Successfully";
-        }
-        else {
+        } else {
             return "Incorrect Temporary password";
         }
     }

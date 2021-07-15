@@ -14,7 +14,7 @@ public class LoginRestController {
     private UserService userService;
 
     @PostMapping("/login")
-    public String login(@RequestBody LoginForm loginForm){
+    public String login(@RequestBody LoginForm loginForm) {
         return userService.loginCheck(loginForm);
     }
 }

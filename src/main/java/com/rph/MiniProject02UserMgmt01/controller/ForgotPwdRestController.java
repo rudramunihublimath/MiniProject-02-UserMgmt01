@@ -12,12 +12,11 @@ public class ForgotPwdRestController {
     private UserService userService;
 
     @PostMapping("/forgotPwd/{emailId}")
-    public String forgotPwd(@PathVariable String emailId){
+    public String forgotPwd(@PathVariable String emailId) {
         boolean status = userService.forgotPwd(emailId);
-        if(status){
+        if (status) {
             return "We have sent password to your email";
-        }
-        else {
+        } else {
             return "Please enter valid email";
         }
 

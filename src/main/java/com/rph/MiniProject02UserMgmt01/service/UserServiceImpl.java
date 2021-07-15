@@ -1,7 +1,6 @@
 package com.rph.MiniProject02UserMgmt01.service;
 
 
-
 import com.rph.MiniProject02UserMgmt01.bindings.LoginForm;
 import com.rph.MiniProject02UserMgmt01.bindings.UnlockAccForm;
 import com.rph.MiniProject02UserMgmt01.bindings.UserRegForm;
@@ -16,20 +15,18 @@ import com.rph.MiniProject02UserMgmt01.repo.CountryMasterRepo;
 import com.rph.MiniProject02UserMgmt01.repo.StateMasterRepo;
 import com.rph.MiniProject02UserMgmt01.repo.UserAccountRepo;
 import com.rph.MiniProject02UserMgmt01.util.EmailUtils;
+import com.rph.MiniProject02UserMgmt01.util.PwdUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Example;
 import org.springframework.stereotype.Service;
-import org.springframework.ui.freemarker.FreeMarkerTemplateUtils;
-
 
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Service
-public class UserServiceImpl implements UserService{
+public class UserServiceImpl implements UserService {
     @Autowired
     private UserAccountRepo userRepo;
     @Autowired
@@ -43,20 +40,34 @@ public class UserServiceImpl implements UserService{
     @Autowired
     private EmailUtils emailUtils;
 
+    private static String generateRandomPazzwrd(int length) {
+        StringBuilder sb = new StringBuilder();
+        Random random = new Random();
+        for (int i = 0; i < length; i++) {
+            sb.append(AppConstants.CANDIDATE_CHARS.charAt(
+                    random.nextInt(AppConstants.CANDIDATE_CHARS.length())));
+        }
+        return sb.toString();
+    }
+
     @Override
     public String loginCheck(LoginForm loginForm) {
         String msg;
-        UserAccountEntity user = userRepo.findByEmailAndPazzword(loginForm.getEmail(),loginForm.getPwd());
-        if(user!=null){
+        String encryptedPwd = null;
+        try {
+            encryptedPwd = PwdUtils.encryptMsg(loginForm.getPwd());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        UserAccountEntity user = userRepo.findByEmailAndPazzword(loginForm.getEmail(), encryptedPwd);
+        if (user != null) {
             String accStatus = user.getAccStatus();
-            if(AppConstants.LOCKED.equals(accStatus)){
+            if (AppConstants.LOCKED.equals(accStatus)) {
                 msg = appProps.getMessages().get(AppConstants.ACC_LOCKED);
-            }
-            else {
+            } else {
                 msg = AppConstants.SUCCESS;
             }
-        }
-        else {
+        } else {
             msg = appProps.getMessages().get(AppConstants.INVALID_CREDENTIALS);
         }
         return msg;
@@ -67,7 +78,7 @@ public class UserServiceImpl implements UserService{
         List<CountryMasterEntity> countries = countryRepo.findAll();
 
         Map<Integer, String> countryMap = new HashMap<>();
-        countries.forEach( country -> {
+        countries.forEach(country -> {
             countryMap.put(country.getCountryId(), country.getCountryName());
         });
         return countryMap;
@@ -79,7 +90,7 @@ public class UserServiceImpl implements UserService{
         List<StateMasterEntity> states = stateRepo.findByCountryId(countryId);
 
         Map<Integer, String> stateMap = new HashMap<>();
-        states.forEach( state -> {
+        states.forEach(state -> {
             stateMap.put(state.getStateId(), state.getStateName());
         });
         return stateMap;
@@ -90,7 +101,7 @@ public class UserServiceImpl implements UserService{
         List<CityMasterEntity> cities = cityRepo.findByStateId(stateId);
 
         Map<Integer, String> cityMap = new HashMap<>();
-        cities.forEach( city -> {
+        cities.forEach(city -> {
             cityMap.put(city.getCityId(), city.getCityName());
         });
         return cityMap;
@@ -99,10 +110,9 @@ public class UserServiceImpl implements UserService{
     @Override
     public String emailCheck(String emailId) {
         Optional<UserAccountEntity> findOne = getUserByEmail(emailId);
-        if(findOne.isPresent()){
+        if (findOne.isPresent()) {
             return AppConstants.DUPLICATE;
-        }
-        else {
+        } else {
             return AppConstants.UNIQUE;
         }
     }
@@ -110,26 +120,24 @@ public class UserServiceImpl implements UserService{
     @Override
     public boolean saveUser(UserRegForm userForm) {
         UserAccountEntity entity = new UserAccountEntity();
-        BeanUtils.copyProperties(userForm,entity);
+        BeanUtils.copyProperties(userForm, entity);
         entity.setAccStatus(AppConstants.LOCKED);
-        entity.setPazzword(generateRandomPazzwrd(6));
-        // TODO: password encryption Functionality
+        String randomPwd = generateRandomPazzwrd(6);
+        String encryptedPwd;
+        try {
+            encryptedPwd = PwdUtils.encryptMsg(randomPwd);
+            entity.setPazzword(encryptedPwd);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
         entity = userRepo.save(entity);
+
         // EMAIL Functionality
         String emailBody = readUnlockAccEmailBody(entity);
         String subject = appProps.getMessages().get(AppConstants.UNLOCK_ACC_EMAIL_SUB);
         boolean status = emailUtils.sendEmail(userForm.getEmail(), subject, emailBody);
-        return entity.getUserId()!=null ? true : false ;
-    }
-
-    private static String generateRandomPazzwrd(int length) {
-        StringBuilder sb = new StringBuilder();
-        Random random = new Random();
-        for (int i = 0; i < length; i++) {
-            sb.append(AppConstants.CANDIDATE_CHARS.charAt(
-                    random.nextInt(AppConstants.CANDIDATE_CHARS.length())));
-        }
-        return sb.toString();
+        return entity.getUserId() != null ? true : false;
     }
 
     private String readUnlockAccEmailBody(UserAccountEntity entity) {
@@ -147,10 +155,12 @@ public class UserServiceImpl implements UserService{
             }
             br.close();
 
+            String decryptedPwd = PwdUtils.decryptMsg(entity.getPazzword());
+
             mailBody = sb.toString();
             mailBody = mailBody.replace(AppConstants.FNAME, entity.getFName());
             mailBody = mailBody.replace(AppConstants.LNAME, entity.getLName());
-            mailBody = mailBody.replace(AppConstants.TEMP_PWD, entity.getPazzword());
+            mailBody = mailBody.replace(AppConstants.TEMP_PWD, decryptedPwd);
             mailBody = mailBody.replace(AppConstants.EMAIL, entity.getEmail());
         } catch (Exception e) {
             e.printStackTrace();
@@ -162,14 +172,28 @@ public class UserServiceImpl implements UserService{
     public boolean unlockAccount(UnlockAccForm unlockAccForm) {
         String email = unlockAccForm.getEmail();
         String tempPwd = unlockAccForm.getTempPwd();
-        UserAccountEntity user = userRepo.findByEmailAndPazzword(email, tempPwd);
+        String encryptedPwd = null;
+        try {
+            encryptedPwd = PwdUtils.encryptMsg(tempPwd);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
-        if(user!=null) {
-            user.setPazzword(unlockAccForm.getNewPwd());
+        UserAccountEntity user = userRepo.findByEmailAndPazzword(email, encryptedPwd);
+
+        if (user != null) {
+            String newPwd = unlockAccForm.getNewPwd();
+            String encryptedNewPwd = null;
+            try {
+                encryptedNewPwd = PwdUtils.encryptMsg(newPwd);
+                user.setPazzword(encryptedNewPwd);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
             user.setAccStatus(AppConstants.UNLOCKED);
             userRepo.save(user);
             return true;
-        }else {
+        } else {
             return false;
         }
     }
@@ -177,7 +201,7 @@ public class UserServiceImpl implements UserService{
     @Override
     public boolean forgotPwd(String emailId) {
         Optional<UserAccountEntity> findOne = getUserByEmail(emailId);
-        if(findOne.isPresent()){
+        if (findOne.isPresent()) {
             UserAccountEntity userEntity = findOne.get();
             String email = userEntity.getEmail();
             String pazzword = userEntity.getPazzword();
@@ -186,8 +210,7 @@ public class UserServiceImpl implements UserService{
             String subject = appProps.getMessages().get(AppConstants.RECOVER_PWD_EMAIL_SUB);
             boolean status = emailUtils.sendEmail(emailId, subject, emailBody);
             return true;
-        }
-        else {
+        } else {
             return false;
         }
     }
@@ -206,11 +229,11 @@ public class UserServiceImpl implements UserService{
                 line = br.readLine();
             }
             br.close();
-
+            String decryptedPwd = PwdUtils.decryptMsg(userEntity.getPazzword());
             mailBody = sb.toString();
             mailBody = mailBody.replace(AppConstants.FNAME, userEntity.getFName());
             mailBody = mailBody.replace(AppConstants.LNAME, userEntity.getLName());
-            mailBody = mailBody.replace(AppConstants.PWD, userEntity.getPazzword());
+            mailBody = mailBody.replace(AppConstants.PWD, decryptedPwd);
         } catch (Exception e) {
             e.printStackTrace();
         }

@@ -18,34 +18,36 @@ public class UserRegRestController {
     private AppProperties appProperties;
 
     @GetMapping("/countries")
-    public Map<Integer,String> getCountires(){
+    public Map<Integer, String> getCountires() {
         return userService.getCountries();
     }
+
     @GetMapping("/states/{countryId}")
-    public Map<Integer,String> getStates(@PathVariable Integer countryId){
+    public Map<Integer, String> getStates(@PathVariable Integer countryId) {
         return userService.getStates(countryId);
     }
+
     @GetMapping("/cities/{stateId}")
-    public Map<Integer,String> getCities(@PathVariable Integer stateId){
+    public Map<Integer, String> getCities(@PathVariable Integer stateId) {
         return userService.getCities(stateId);
     }
+
     @GetMapping("/emailCheck/{email}")
-    public String uniqueEmailCheck(@PathVariable String email){
+    public String uniqueEmailCheck(@PathVariable String email) {
         String status = userService.emailCheck(email);
         return status;
     }
+
     @PostMapping("/saveUser")
-    public String saveUser(@RequestBody UserRegForm userRegForm){
+    public String saveUser(@RequestBody UserRegForm userRegForm) {
         boolean saveUser = userService.saveUser(userRegForm);
         Map<String, String> messages = appProperties.getMessages();
-        if(saveUser){
+        if (saveUser) {
             return messages.get(AppConstants.USER_REG_SUCCESS);
-        }
-        else {
+        } else {
             return messages.get(AppConstants.USER_REG_FAIL);
         }
     }
-
 
 
 }
