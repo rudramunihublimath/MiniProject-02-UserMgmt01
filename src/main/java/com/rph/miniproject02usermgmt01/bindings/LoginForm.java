@@ -1,0 +1,9 @@
+package com.rph.miniproject02usermgmt01.bindings;
+
+import lombok.Data;
+
+@Data
+public class LoginForm {
+    private String email;
+    private String pwd;
+}

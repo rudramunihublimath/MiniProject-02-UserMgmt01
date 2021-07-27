@@ -32,4 +32,24 @@ commit;
   "stateId": 1
 }
 
+4. Unlock Acc :
+{
+  "email": "rudra.hublimath@gmail.com",
+  "newPwd": "admin@123",
+  "tempPwd": "LJFTH7"
+}
 
+5. Login :
+{
+  "email": "rudra.hublimath@gmail.com",
+  "pwd": "admin@123"
+}
+
+-------
+
+5. Sonar : For Quality check
+Run sonar on ur machine . it should be up and running.
+URL to access sonar - http://localhost:9000/
+
+Bugs and Vulnerabilities are : 0
+Code Smells are : 0
