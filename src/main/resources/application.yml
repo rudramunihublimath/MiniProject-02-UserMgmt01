@@ -2,7 +2,7 @@ server:
   port: 9090
 spring:
   application:
-    name: STOCK-PRICE-API
+    name: USER-MGMT-API
   datasource:
     url: jdbc:oracle:thin:@//localhost:1521/XE
     username: RPH
